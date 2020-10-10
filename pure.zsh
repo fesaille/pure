@@ -154,6 +154,10 @@ prompt_pure_preprompt_render() {
 	if [[ -n $prompt_pure_git_stash ]]; then
 		preprompt_parts+=('%F{$prompt_pure_colors[git:stash]}${PURE_GIT_STASH_SYMBOL:-≡}%f')
 	fi
+	# Git stash symbol (if opted in).
+    if (( ${PURE_VENV_PROMPT:-1} )); then 
+        preprompt_parts+=('%(12V.%F{$prompt_pure_colors[virtualenv]}%12v%f .)')
+    fi
 
 	# Execution time.
 	[[ -n $prompt_pure_cmd_exec_time ]] && preprompt_parts+=('%F{$prompt_pure_colors[execution_time]}${prompt_pure_cmd_exec_time}%f')
@@ -175,7 +179,11 @@ prompt_pure_preprompt_render() {
 		$cleaned_ps1
 	)
 
-	PROMPT="${(j..)ps1}"
+	PROMPT=""
+    if ((${(M)#jobstates:#suspended:*} != 0)); then
+        PROMPT+='%F{$prompt_pure_colors[git:dirty]}✦ '
+    fi
+	PROMPT+="${(j..)ps1}"
 
 	# Expand the prompt for future comparision.
 	local expanded_prompt
@@ -812,7 +820,7 @@ prompt_pure_setup() {
 	fi
 
 	# If a virtualenv is activated, display it in grey.
-	PROMPT='%(12V.%F{$prompt_pure_colors[virtualenv]}%12v%f .)'
+	PROMPT='' # 
 
 	# Prompt turns red if the previous command didn't exit with 0.
 	local prompt_indicator='%(?.%F{$prompt_pure_colors[prompt:success]}.%F{$prompt_pure_colors[prompt:error]})${prompt_pure_state[prompt]}%f '
